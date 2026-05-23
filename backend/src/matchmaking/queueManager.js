@@ -1,7 +1,13 @@
 const Redis = require('ioredis');
 require('dotenv').config();
 
-const redis = new Redis(process.env.REDIS_URL);
+const redisUrl = process.env.REDIS_URL;
+
+// For production (like Upstash/Render), we often need to handle TLS and retries
+const redis = new Redis(redisUrl, {
+  maxRetriesPerRequest: null, // ioredis recommendation for some cloud providers
+  connectTimeout: 10000,
+});
 
 redis.on('error', (err) => {
   console.error('Redis connection error:', err);
