@@ -5,6 +5,9 @@ const configuration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
   ],
 };
 
@@ -16,6 +19,8 @@ export const useWebRTC = (socket: Socket | null) => {
 
   const cleanup = () => {
     if (peerConnection.current) {
+      peerConnection.current.onicecandidate = null;
+      peerConnection.current.ontrack = null;
       peerConnection.current.close();
       peerConnection.current = null;
     }
@@ -24,9 +29,14 @@ export const useWebRTC = (socket: Socket | null) => {
   };
 
   const createPeerConnection = (to: string) => {
+    console.log('Creating PeerConnection for:', to);
     cleanup();
     peerIdRef.current = to;
     const pc = new RTCPeerConnection(configuration);
+
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE Connection State:', pc.iceConnectionState);
+    };
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
@@ -35,6 +45,7 @@ export const useWebRTC = (socket: Socket | null) => {
     };
 
     pc.ontrack = (event) => {
+      console.log('Received remote track');
       setRemoteStream(event.streams[0]);
     };
 
